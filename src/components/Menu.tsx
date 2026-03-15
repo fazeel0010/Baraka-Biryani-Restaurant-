@@ -87,7 +87,7 @@ const menuCategories = [
     title: "Cutlery",
     description: "Utensils provided to help you enjoy your meal.",
     items: [
-      { name: "Plastic spoon", price: "Rs.10", desc: "Convenient disposable spoon for eating.", image: "" },
+      { name: "Plastic spoon", price: "Rs.10", desc: "Convenient disposable spoon for eating.", image: "https://cdn.jsdelivr.net/gh/fazeel0010/Baraka-Biryani-Restaurant-@main/Web-Assets/Baraka%20Cutlery.png?q=80&w=200&auto=format&fit=crop" },
     ]
   }
 ];
