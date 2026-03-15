@@ -149,6 +149,15 @@ export default function Menu() {
                         <span className="text-lg font-bold text-accent whitespace-nowrap">{item.price}</span>
                       </div>
                       <p className="text-brand-800/70 text-sm leading-relaxed">{item.desc}</p>
+                      <a 
+                        href="https://www.foodpanda.pk/restaurant/jq2x/baraka-biryani" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-3 inline-flex items-center justify-center px-4 py-1.5 bg-[#D70F64] text-white text-xs font-bold uppercase tracking-wider rounded-full hover:bg-[#e21b70] transition-colors self-start shadow-md shadow-[#D70F64]/20"
+                      >
+                        Order on Foodpanda
+                      </a>
                     </div>
                   </div>
                 ))}
@@ -204,11 +213,19 @@ export default function Menu() {
                   <UtensilsCrossed size={64} className="text-brand-900/20" />
                 </div>
               )}
-              <div className="mt-6 text-center bg-brand-950 p-6 rounded-2xl max-w-2xl w-full border border-white/10 shadow-2xl">
+              <div className="mt-6 text-center bg-brand-950 p-6 rounded-2xl max-w-2xl w-full border border-white/10 shadow-2xl flex flex-col items-center">
                 <h3 className="text-2xl md:text-3xl font-serif font-bold text-white mb-2">
                   {selectedItem.name} <span className="text-accent ml-3">{selectedItem.price}</span>
                 </h3>
-                <p className="text-white/80 text-lg font-medium">{selectedItem.desc}</p>
+                <p className="text-white/80 text-lg font-medium mb-6">{selectedItem.desc}</p>
+                <a 
+                  href="https://www.foodpanda.pk/restaurant/jq2x/baraka-biryani" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center px-8 py-3 bg-[#D70F64] text-white text-sm font-bold uppercase tracking-widest rounded-full hover:bg-[#e21b70] transition-all hover:scale-105 shadow-lg shadow-[#D70F64]/20"
+                >
+                  Order on Foodpanda
+                </a>
               </div>
             </motion.div>
           </motion.div>
