@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { UtensilsCrossed, X } from 'lucide-react';
+import { UtensilsCrossed, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const menuCategories = [
   {
@@ -92,6 +94,132 @@ const menuCategories = [
 
 export default function Menu() {
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const allItems = menuCategories.flatMap(category => category.items);
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedItem) return;
+    const currentIndex = allItems.findIndex(item => item.name === selectedItem.name);
+    const nextIndex = (currentIndex + 1) % allItems.length;
+    setSelectedItem(allItems[nextIndex]);
+  };
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!selectedItem) return;
+    const currentIndex = allItems.findIndex(item => item.name === selectedItem.name);
+    const prevIndex = (currentIndex - 1 + allItems.length) % allItems.length;
+    setSelectedItem(allItems[prevIndex]);
+  };
+
+  const handleDownloadMenu = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (isDownloading) return;
+    setIsDownloading(true);
+
+    try {
+      const doc = new jsPDF();
+      
+      // Try to load the logo
+      try {
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.src = "https://cdn.jsdelivr.net/gh/fazeel0010/Baraka-Biryani-Restaurant-@main/Web-Assets/Baraka-Biryani.png";
+        
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const imgData = canvas.toDataURL('image/png');
+          // Add image centered. Width 120, height 60
+          doc.addImage(imgData, 'PNG', 55, 10, 100, 50);
+        }
+      } catch (err) {
+        console.warn("Could not load logo for PDF", err);
+      }
+      
+      // Add Title
+      doc.setFontSize(24);
+      doc.setTextColor(23, 23, 23); // brand-900
+      doc.text("Baraka Biryani", 105, 62, { align: "center" });
+      
+      doc.setFontSize(12);
+      doc.setTextColor(128, 0, 0); // elegant maroon
+      doc.text("Authentic dum biryani and royal Pakistani cuisine", 105, 68, { align: "center" });
+
+      // Add Contact Details
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text("H#61, Surti Muslim Society, Model Colony, Malir District, KHI 75100", 105, 74, { align: "center" });
+      doc.text("Phone: +92 332 2011406  |  Email: reservations@barakabiryani.com", 105, 79, { align: "center" });
+
+      let startY = 93;
+
+      menuCategories.forEach((category) => {
+        // Check if we need a new page for the category title
+        if (startY > 250) {
+          doc.addPage();
+          startY = 20;
+        }
+
+        // Add Category Title
+        doc.setFontSize(16);
+        doc.setTextColor(23, 23, 23);
+        doc.text(category.title, 14, startY);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text(category.description, 14, startY + 6);
+
+        // Add Table
+        const tableData = category.items.map(item => [
+          item.name,
+          item.desc,
+          item.price
+        ]);
+
+        autoTable(doc, {
+          startY: startY + 10,
+          head: [['Item', 'Description', 'Price']],
+          body: tableData,
+          theme: 'striped',
+          headStyles: { fillColor: [128, 0, 0] }, // elegant maroon
+          columnStyles: {
+            0: { cellWidth: 45, fontStyle: 'bold' },
+            1: { cellWidth: 'auto' },
+            2: { cellWidth: 25, halign: 'right', fontStyle: 'bold' }
+          },
+          margin: { top: 10, right: 14, bottom: 10, left: 14 },
+        });
+
+        startY = (doc as any).lastAutoTable.finalY + 15;
+      });
+
+      // Footer
+      const pageCount = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+      }
+
+      doc.save("Baraka_Biryani_Menu.pdf");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <section id="menu" className="py-24 md:py-32 bg-brand-50">
@@ -167,12 +295,13 @@ export default function Menu() {
         </div>
 
         <div className="mt-16 text-center">
-          <a 
-            href="#" 
-            className="inline-block px-8 py-4 border-2 border-brand-900 text-brand-900 font-bold uppercase tracking-widest rounded-full hover:bg-brand-900 hover:text-brand-50 transition-all hover:scale-105"
+          <button 
+            onClick={handleDownloadMenu}
+            disabled={isDownloading}
+            className={`inline-block px-8 py-4 border-2 border-brand-900 text-brand-900 font-bold uppercase tracking-widest rounded-full transition-all ${isDownloading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-brand-900 hover:text-brand-50 hover:scale-105 cursor-pointer'}`}
           >
-            Download Full Menu
-          </a>
+            {isDownloading ? 'Generating PDF...' : 'Download Full Menu'}
+          </button>
         </div>
 
       </div>
@@ -192,6 +321,20 @@ export default function Menu() {
               className="absolute top-4 right-4 sm:top-6 sm:right-6 z-[110] p-2 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full transition-colors"
             >
               <X size={28} />
+            </button>
+            
+            <button
+              onClick={handlePrev}
+              className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-[110] p-2 sm:p-3 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full transition-colors"
+            >
+              <ChevronLeft size={28} className="sm:w-8 sm:h-8" />
+            </button>
+
+            <button
+              onClick={handleNext}
+              className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-[110] p-2 sm:p-3 text-white/70 hover:text-white bg-black/50 hover:bg-black/80 rounded-full transition-colors"
+            >
+              <ChevronRight size={28} className="sm:w-8 sm:h-8" />
             </button>
             
             <motion.div
